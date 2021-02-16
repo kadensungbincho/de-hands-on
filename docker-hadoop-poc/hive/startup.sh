@@ -48,6 +48,5 @@ then
   ./hive --service metastore
 else
   echo "execute the default, which is hiveserver2"
-  $RANGER_HIVE_PLUGIN_HOME/enable-hive-plugin.sh &&
   ./hiveserver2  --hiveconf hive.server2.enable.doAs=true
 fi
