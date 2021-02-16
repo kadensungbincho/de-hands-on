@@ -1,0 +1,120 @@
+version: "3"
+
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    volumes:
+      - namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - hadoop.env
+    ports:
+      - "9870:9870"
+      - "8020:8020"
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    volumes:
+      - datanode:/hadoop/dfs/data
+    env_file:
+      - hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    ports:
+      - "50075:50075"
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+    env_file:
+      - ./hadoop.env
+    ports:
+      - "8032:8032"
+      - "8088:8088"
+
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+    ports:
+      - "8042:8042"
+
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./hadoop.env
+    ports:
+      - "8188:8188"
+
+  hive-metastore-mysql:
+    image: mysql:8.0.21
+    container_name: hive-metastore-mysql
+    hostname: hive-metastore-mysql
+    command: --default-authentication-plugin=mysql_native_password --lower-case-table-names=1
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: metastore
+      MYSQL_USER: hive
+      MYSQL_PASSWORD: hive
+    ports:
+      - "3306:3306"
+
+  hive-server:
+    build:
+      context: .
+      dockerfile: hive/Dockerfile
+    depends_on:
+      - resourcemanager
+      - nodemanager
+      - historyserver
+      - hive-metastore-mysql
+    volumes:
+      - ./dummy_data:/opt/dummy_data
+    env_file:
+      - hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+      DUMMY_DATA: 1
+    ports:
+      - "10000:10000"
+
+  hive-metastore:
+    build:
+      context: .
+      dockerfile: hive/Dockerfile
+    env_file:
+      - hadoop.env
+    command: ["startup.sh", "metastore"]
+    depends_on:
+      - hive-server
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-mysql:3306"
+    ports:
+      - "9083:9083"
+
+  zookeeper:
+    image: zookeeper:3.4.14
+    restart: always
+    hostname: zookeeper
+    ports:
+      - 2181:2181
+
+volumes:
+  namenode:
+  datanode:
+  hadoop_historyserver:
+
+
