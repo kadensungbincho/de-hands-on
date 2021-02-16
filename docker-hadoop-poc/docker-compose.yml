@@ -24,7 +24,7 @@ services:
     environment:
       SERVICE_PRECONDITION: "namenode:9870"
     ports:
-      - "50075:50075"
+      - "9864:9864"
 
   resourcemanager:
     image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
