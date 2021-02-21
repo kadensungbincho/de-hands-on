@@ -1,4 +1,7 @@
 version: "3"
+networks:
+  default:
+    name: docker-hadoop-poc
 
 services:
   namenode:
@@ -73,14 +76,14 @@ services:
       - "3306:3306"
 
   hive-server:
-    build:
-      context: .
-      dockerfile: hive/Dockerfile
+    image: kadensungbincho/hadoop-hive-mysql:hive3.1.2-hadoop3.2.1-java8
+    container_name: hive-server
+    hostname: hive-server
     depends_on:
       - resourcemanager
       - nodemanager
       - historyserver
-      - hive-metastore-mysql
+      - hive-metastore
     volumes:
       - ./dummy_data:/opt/dummy_data
     env_file:
@@ -92,14 +95,14 @@ services:
       - "10000:10000"
 
   hive-metastore:
-    build:
-      context: .
-      dockerfile: hive/Dockerfile
+    image: kadensungbincho/hadoop-hive-mysql:hive3.1.2-hadoop3.2.1-java8
+    container_name: hive-metastore
+    hostname: hive-metastore
+    depends_on:
+      - hive-metastore-mysql
     env_file:
       - hadoop.env
     command: ["startup.sh", "metastore"]
-    depends_on:
-      - hive-server
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-mysql:3306"
     ports:
