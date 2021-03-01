@@ -1,1 +1,4 @@
 .idea
+
+# docker-apache-airflow-poc
+./docker-apache-airflow-poc/logs
