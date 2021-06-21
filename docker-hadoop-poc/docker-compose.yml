@@ -102,7 +102,7 @@ services:
       - hive-metastore-mysql
     env_file:
       - hadoop.env
-    command: ["startup.sh", "metastore"]
+    command: [ "startup.sh", "metastore" ]
     environment:
       SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-mysql:3306"
     ports:
