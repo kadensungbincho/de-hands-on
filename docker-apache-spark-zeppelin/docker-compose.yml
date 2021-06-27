@@ -34,6 +34,8 @@ services:
       - spark-master
     ports:
       - "0.0.0.0:8888:8080"
+    volumes:
+      - ./pyspark-samples:/workspace/pyspark-samples
     environment:
       - "SPARK_MASTER=spark://spark-master:7077"
       - "SPARK_HOME=/spark"
